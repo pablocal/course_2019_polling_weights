@@ -14,15 +14,15 @@ Al concluir la sesión los estudiantes:
 - Diseñarán y generarán coeficientes de ponderación con `R`.
 
 ## Metodología
-La sesión estará compuesta por dos módulos teoricos seguidos de dos actividades prácticas. En las práctica se usará `R` para realizar un análisis de representatividad de una encuesta, que posteriormente será ajustada utilizando la técnica de calibración. 
+La sesión estará compuesta por dos módulos teoricos seguidos de dos actividades prácticas. En las práctica se usará `R` para analizar la representatividad de una muestra, que posteriormente será ajustada utilizando la técnica de calibración. 
 
-En las dos prácticas los estudiantes tendrán una plantilla de *script* y una guía para realizar la actividad paso a paso. El *script* completo estará disponibles. 
+En las dos prácticas los estudiantes tendrán una plantilla de *script* y una guía para realizar la actividad paso a paso. El *script* completo estará disponible.
 
-Para los ejercicios prácticos se utilizarán los microdatos de una encuesta preelectoral de GESOP de febrero de 2019, publicada en El Periódico.
+En los ejercicios prácticos se utilizarán los microdatos de una encuesta preelectoral de GESOP de febrero de 2019, publicada en El Periódico.
 
 ## 1. Problemas de representatividad en las encuestas (30')
-- **Encuestas, otros datos y representatividad**. Explicar la lógica de la representatividad en la investigación con encuestas. Distinguir entre porblemas de cobertura y no-respuesta.
-- **Tipos de muestras y potenciales problemas** aplicado a las encuestas electorales. Entender cómo los problemas de representatividad dan lugar a desvíos de las estimaciones de voto a partir de encuestas electorales. Utilizar casos históricos de *polling failure*. 
+- **Encuestas y representatividad**. Explicar la lógica de la representatividad en la investigación con encuestas. Distinguir entre porblemas de cobertura y no-respuesta.
+- **Tipos de muestras y potenciales problemas** aplicado a las encuestas electorales. Entender cómo los problemas de representatividad dan lugar a desviaciones de las estimaciones de voto. Utilizar casos históricos de *polling failure*. 
 - **Análisis de representatividad** de las muestras e introducción a los *R-indicators*. Desarrollar un marco de evaluación para analizar el nivel de representatividad de una muestra. Introducir el uso de los *R-indicators*.
 
 ### Práctica 1: análisis de representatividad (40')

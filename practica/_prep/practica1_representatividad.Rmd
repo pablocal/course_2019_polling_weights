@@ -1,0 +1,149 @@
+---
+title: "Práctica 1: Análisis de representatividad"
+author: "Máster de Análisis Político y Electoral (UC3M)"
+date: "Nov. 2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(expss)
+encuesta <- read_rds("../../datos/encuesta_gesop.RDS")
+datos_poblacionales <- read_rds("../../datos/datos_poblacionales.RDS")
+```
+
+## Situación inicial
+Febrero de 2019. El Gobierno presidido por Pedro Sánchez acaba de convocar elecciones que se celebrarán el domingo 28 de abril. En la oficina de análisis del presidente quieren tener una estimación de voto reciente para tomar decisiones en el marco de la campaña. Están muy interesados en la **estimación del voto del PSOE**, pero también en las del **PP** y **Vox**.
+
+Como analista te piden que **realices la estimación de voto** y te envían los microdatos de una encuesta. El primer paso será realizar un **análisis de representatividad** para comprobar la calidad de los datos. 
+
+> La **encuesta** (n=1000) fue realizada por la empresa GESOP. El trabajo de campo se hizo mediante llamadas, sin especificar si a fijos o a móviles, entre los días 13 y 15 de febrero. El muestreo de los hogares fue estratificado por comunidad y tamaño del municipio. En cada hogar la persona entrevistada fue elegida utilizando cuotas de sexo y edad. La [ficha técnica](https://www.elperiodico.com/es/ext_resources/gesop/EP_EncPreelEspa%C3%B1a_Feb19_FichaT%C3%A9cnica+Cuestionario+ListaDeVariables.pdf) y los [microdatos](https://www.elperiodico.com/es/ext_resources/gesop/EP_EncPreelEspa%C3%B1a_Feb19_Microdatos.zip) están disponibles en abierto.
+
+## Planificar la tarea
+Antes de emepezar con los datos dedica unos cinco minutos a planificar la tarea. En la carpeta `datos` está el `cuestionario_GESOP_feb2019.pdf`. Abre el cuestionario (pp. 4-7) y responde a las siguientes preguntas:
+
+**¿Qué variables contenidas en el cuestionario pueden servir para realizar un análisis de prepresentatividad?**
+
+**¿De qué fuente (estudio/organización) podrías recabar los datos poblacionales de las variables que has señalado en la pregunta anterior anterior?** 
+\newpage
+
+
+Aquí tienes una lista de las variables de la encuesta para las que existen referentes poblacionales y la fuente de esos datos:
+
+```{r, echo=FALSE, fig.align='center'}
+datos_poblacionales %>% 
+  select(variable, variable_desc, fuente) %>%
+  group_by(variable) %>% 
+  summarise(variable_desc = first(variable_desc),
+            fuente = first(fuente)) %>% 
+  rename(Variable = variable,
+         `Descripción` = variable_desc,
+         Fuente = fuente) %>% 
+  kableExtra::kable()
+
+```
+
+## 1. Datos y paquetes
+Para este ejercicio vas a utilizar la encuesta `encuesta_gesop.RDS` y los datos poblacionales `datos_poblacionales.RDS` que se encuentran en la carpeta `datos`. Además harás uso de los paquetes:
+
+- `tidyverse`: Contiene a suvez un conjunto de paquetes que facilitan la gestión y el análisis de los datos.
+- `expss`: Permite crear tablas personalizadas.
+
+1) **Cargar los paquetes**:
+
+```{r, eval = FALSE}
+# install.packages("tidyverse")
+# install.packages("expss")
+library(tidyverse) # tidyverse for data management
+library(expss)
+```
+
+
+2) **Cargar los datos**:
+
+```{r, eval = FALSE}
+encuesta <- read_rds("datos/encuesta_gesop.RDS")
+datos_poblacionales <- read_rds("datos/datos_poblacionales.RDS")
+```
+
+El objeto `encuesta` es un *data frame* en el que están contenido los datos de la encuesta. El objeto `datos_poblacionales` es también un *data frame* en el que están las estimaciones (porcentajes) poblacionales de las variables que vas a utilizar en el análisis de representatividad. Estos datos están en formato largo:
+
+
+```{r}
+head(datos_poblacionales)
+```
+
+## 2. Crear una tabla con las estimaciones de la muestra
+
+En primer lugar echa un vistazo a los datos de la encuesta para ver qué variables nos interesan para este análisis. Date cuenta de que existe las variable `peso_sele`, que debemos de tener en cuenta, ya que se trata de una ponderación que ajusta la muestra en el caso de que hayan diferentes probabilidades de selección.
+
+
+```{r}
+glimpse(encuesta)
+```
+
+Para construir la tabla vas a utilizar el paquete `expss`. En ese paquete se definen los datos. Posteriormente las variables en filas, que se incluyen en la función `tab_cells()`. La operación que se pretende realizar, en este caso obtener los porcentajes de columna, se define con `tab_stat_cpct()`. La función `tab_pivot()` se encarga de ensamblar todas las partes.
+
+Para poder unir la tabla con los datos poblacionales vas a cambiar el nombre de las columnas del objeto `tabla`. La primera columna será `variable_valor` y la segunda `muestra`.
+
+```{r}
+tabla_muestra <- encuesta %>% # añadir datos
+  tab_cells(caut, tamuni, sexo, edad, estud, ocupa, recuerdo) %>% # añadir variables
+  tab_stat_cpct() %>% # añadir estadístico: porcentajes de columna
+  tab_pivot() # ensamblar tabla
+
+colnames(tabla_muestra) <- c("variable_valor", "muestra") # cambiar los nombres de las columnas
+```
+
+## 3. Unir la tabla de resultados de la encuesta los datos poblacionales y calcular la diferencia 
+
+En primer lugar se utiliza la función `left_join()` para unir la `tabla_muestra` con los `datos_poblacionales` en base a la variable `"variable_valor"`, que está presente en ambas tablas.
+
+```{r}
+tabla_muestra_pobla <- left_join(tabla_muestra, datos_poblacionales, by = "variable_valor") # unir tabla con totales poblacionales
+```
+
+En segundo término se calcula la **diferencia entre la muestra y la población** y se descartan las filas que contienen valores perdidos `NA`.
+
+```{r}
+tabla_muestra_pobla <- tabla_muestra_pobla %>% 
+  mutate(dif = round(muestra - pobla, 1)) %>% #diferencia entre la muestra y la población
+  filter(!is.na(dif)) # eliminar los casos que son perdidos (NA)
+```
+
+## 4. Analizar las desviaciones de la muestra
+
+Ahora vas a analizar las desviaciones entre la muestra y la población. Para ello, crea un **gráfico resumen** en el que se visualice el **error medio absoluto** (*MAE* en inglés) asociado a cada variable.
+
+> El **MAE** (*mean absolute error*) es una medida resumen empleada para evaluar el error total en variables categóricas. Por ejemplo, si en la población hay un 50% de hombres y un 50% de mujeres, y en la muestra los porcentajes son 45% hombres y 55% mujeres, el MAE será del 5%. En este caso, la diferencia media entre los totales poblacionales y la encuesta es del 5%.
+
+
+```{r}
+tabla_muestra_pobla %>% # calcular el error medio absoluto para cada variable
+  mutate(dif_abs = abs(dif)) %>% 
+  group_by(variable) %>%
+  summarise(mae = mean(dif_abs)) %>% 
+  ggplot(aes(x = reorder(variable, mae), y = mae)) +
+  geom_col()
+```
+
+Ahora céntrate en las variables que más desviaciones presentan: `ocupa`, `estud` y `recuerdo`. Observa cuáles son los grupos sobrerrepresentados y subrrepresentados en la muestra.
+
+```{r, eval=F}
+tabla_muestra_pobla %>% 
+  filter(variable %in% c("ocupa", "estud", "recuerdo")) %>% 
+  select(valor, muestra, pobla, dif)
+
+```
+
+```{r, fig.align='center'}
+tabla_muestra_pobla %>% 
+  filter(variable %in% c("ocupa", "estud", "recuerdo")) %>% 
+  select(variable, valor, muestra, pobla, dif) %>% 
+  kableExtra::kable()
+```
+
+
+
+  
