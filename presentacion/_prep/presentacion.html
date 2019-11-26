@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+  <head>
+    <title>Es cuestión de ser, no de parecer</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Pablo Cabrera Álvarez |        @pablocalv  Universidad de Salamanca" />
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Es cuestión de ser, no de parecer
+## Representatividad y ajustes en encuestas
+### </br>Pablo Cabrera Álvarez |        <span class="citation">@pablocalv</span> </br> </br>Universidad de Salamanca
+### Nov. 2019
+
+---
+
+
+
+
+class: inverse, center, middle
+
+# Tenemos un problema
+
+---
+# Reino Unido, 2015
+
+![](pics/gif1.gif)
+
+---
+# La clave estaba en la representatividad
+&lt;center&gt;
+![Sturgis et al., 2016](pics/pic3.png)
+&lt;/center&gt;
+Sturgis *et al.*, 2016
+---
+# Es cuestión de ser, no de parecer
+
+- Encuestas, muestreo y problemas
+
+- Encuestas electorales y muestreo
+
+- Análisis de representatividad
+
+  - **Práctica**: análisis de representatividad
+
+- Ajustes en las encuestas
+
+- Generar un peso paso a paso con `R`
+
+  - **Práctica**: calibrar una muestra
+
+
+---
+class: inverse, center, middle
+
+# Encuestas, muestreo y problemas
+
+---
+# Doble inferencia
+
+&lt;center&gt;
+![Font y Pasadas, 2016](pics/pic1.png)
+&lt;/center&gt;
+Font y Pasadas, 2016  
+---
+# Muestreo e inferencia
+
+&lt;img src="presentacion_files/figure-html/unnamed-chunk-1-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+# Muestreo e inferencia
+
+&lt;img src="presentacion_files/figure-html/unnamed-chunk-2-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# Muestreo ideal (probabilístico)
+
+- Existe un **marco muestral** en el que están listados *todos* los elementos de la población.
+
+
+- El marco muestral contiene **información auxiliar** como sexo, edad o ingresos. Estas variables sonútiles para estratificar la muestra.
+
+
+- Todos los elementos seleccionados en la muestra **responden** a la encuesta.
+
+
+- **Procedimiento**: todos los casos tienen una probabilidad `\(\frac{n}{N}\)` de ser elegidos. Se seleccionan `\(n\)` casos a partir de números aleatorios.
+
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Nombre &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; Sexo &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Edad &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; Población &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Teléfono &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Fernández Fernández, Antonio &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; H &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 25 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Madrid &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 666534 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Pérez Pérez, Clara &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; M &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 26 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Madrid &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 6663245 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; González González, María &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; M &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 47 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Fuenlabrada &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 9234534 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+---
+# Muestreo real
+
+.pull-left[
+¿Existe en España un **marco muestral** de la población general al que tengan acceso las organizaciones de investigación social?
+
+
+  - Existen registros como el **padrón de población** (INE), pero las empresas de investigación sólo pueden acceder a los datos anonimizados.
+
+¿Todos los elementos de la muestra **responden** a la encuesta?
+
+
+  - No, las tasas de respuestas en encuestas telefónicas pueden llegar a estar por debajo del 10% (Kennedy y Hartig, 2019).
+]
+  
+--
+.pull-right[
+&lt;a href="https://www.pewresearch.org/fact-tank/2019/02/27/response-rates-in-telephone-surveys-have-resumed-their-decline/ft_19-02-27_atp1_afterbriefplateau_2/"&gt;&lt;img src="https://www.pewresearch.org/wp-content/uploads/2019/02/FT_19.02.27_ATP1_Afterbriefplateau_2.png?w=350"&gt;&lt;/a&gt;
+]
+---
+# Los problemas del muestreo probabilístico
+
+Problemas de las **encuestas probabilísticas**:
+
+--
+
+- Impedimentos **técnicos**. No existe marco muestral, está incompleto o no es posible acceder. Posible sesgo provocado por la no respuesta.
+
+
+
+- Mayor **coste** que un muestreo no probabilístico. Necesidad de extender el trabajo de campo en encuestas telefónicas y personales.
+
+
+
+- Necesita más **tiempo** para recoger los datos. Los hogares que no responden necesitan ser contactados en diferentes horarios por un período de tiempo suficiente.
+
+---
+# Alternativas
+
+- **Muestreo cuasiprobabilístico**: Una parte de la selección de las unidades muestrales se realiza utilizando procedimientos probabilísticos. En el último paso se utilizan cuotas para elegir a la persona entrevistada.
+
+  - **Muestro de hogares** se realiza a partir de rutas aleatorias o de número de teléfono (fijos y móviles) generados de forma aleatoria (RDD).
+
+  - Las **cuotas** se establecen a partir de los datos poblacionales. Se utilizan variables como sexo y edad. Cada zono geográfica tiene asignadas unas cuotas. Al finalizar el trabajo de campo el perfil de exo y edad de la muestra coincidirá con el de la población.
+
+--
+
+- **Muestreo no probabilístico**: No se conoce la probabilidad de selección de los elementos de la población (Baker *et al.*, 2013).
+
+  - Encuestas por cuotas o *river sampling*. Paneles de internautas reclutados a partir de captación activa o pasiva.
+
+  - Inferir a partir de muestras no probabilísticas. Procedimientos estadísticos o ajustes para mejorar la representatividad de la muestra e inferir.
+
+---
+# Problemas asociados a las muestras no probabilísticas
+
+- Encuesta en un **panel online** de volunatios para conocer **intención de voto**.
+
+--
+
+  - Sesgo de **cobertura**. Algunos elementos de la población no tengan ninguna posibilidad de ser elegidos. Por ejemplo, una parte importante de las personas mayores de 65 años no acceden con regularidad a internet. 
+
+--
+
+  - Sesgo de **autoselección**. La entrada en el panel está determinada por los propios usuarios, que deciden unirse, en ocasiones porque reciben una compensación econónmica a cambio de cada encuesta completada.  
+
+--
+
+  - Sesgo de **no respuesta**. Todos los panelistas invitados no completarán la encuesta. Esto puede ser un problema si aquellos que contestan son diferentes que los que no responden.
+
+---
+# Problemas asociados a las muestras no probabilísticas
+
+
+
+&lt;img src="pics/pic5.png" width="555" style="display: block; margin: auto;" /&gt;
+
+(Elliot y Valliant, 2017)
+
+---
+class: inverse, center, middle
+# Muestreo en encuestas electorales
+
+---
+# Muestreo en encuestas electorales
+Las encuestas se pueden diferenciar según el modo de muestreo elegido.
+
+- Encuesta con muestra **probabilística**: Tanto los hogares como las personas que son entrevistadas son seleccionadas utilizando métodos probabilísticos.
+
+- Encuesta **cuasiprobabilística**: Hacen una selección probabilística del hogar y utilizan cuotas para seleccionar a la persona a entrevistar.
+
+- Encuesta **no probabilística**: Paneles de internet o listados de números de teléfono en los que no existe una probabilidad conocida de ser incluido.
+
+Las encuestas realizadas para el análisis político y electoral suelen ser cuasiprobabilísticas o no probabilísticas.
+---
+# Encuestas electorales en España
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Organización &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; Muestreo &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; Descripción &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; CIS (Barómetros) &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Cuasiprobabilístico &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Presencial. Selección de secciones censales de forma probabilística. Hogares con rutas aleatorias. Entrevistados por cuotas &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; CIS (ESE) &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Probabilístico &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Presencial.Selección de hogares a partir de .. &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Metroscopia &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Probabilítico/cuasiprobabilístico &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Telefónica. &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; GAD3 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Cuasiprobabilístico &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Telefónica. &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; IMOP insights &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Cuasiprobabilístico &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Telefónica. &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; 40dB &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; No probabilístico &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Panel de internautas. &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; GESOP &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Cuasiprobabilístico &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Telefónica. &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; NC Rport &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Cuasiprobabilístico &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Telefónica. &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Sociométrica &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Cuasiprobabilístico &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Telefónica y panel de internautas. &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+---
+class: inverse, center, middle
+# Análisis de representatividad
+
+---
+# La información de la ficha técnica
+
+Estudiar **ficha técnica** de la encuesta:
+
+- **Modo** de administración `\(\rightarrow\)` Problemas de cobertura o respuesta
+  - Encuesta **telefónica**: Móviles o fijos, generación aleatoria de números.
+  - Encuesta **panel de internautas**: Tipo de captación.  
+
+--
+  
+- Detalles del **muestreo** `\(\rightarrow\)` Tipo de muestreo
+  
+--
+  
+- **Fechas** del trabajo de campo `\(\rightarrow\)` Procedimientos de campo (llamadas o visitas) 
+
+--
+
+
+- **Tamaño** de la muestra `\(\rightarrow\)` Precisión de las estimaciones (probabilística o cuasiprobabilística)
+
+---
+# Análisis de representatividad por pasos
+
+**Comparar la distribución poblacional** de ciertas varaibles con la **muestra**:
+
+1. **Identificar las variables** del cuestionario que son susceptibles de tener equivalentes poblacionales.
+  
+--
+
+2. Encontrar la fuentes de **datos poblacionales**:
+  - Registros poblacionales (INE).
+  - Encuestas con altos estándares metodológicos (ESS, CIS).
+
+--
+
+3. Determinar la **equivalencia de los datos poblacionales**. Tener en cuenta posibles errores de medición y comparabilidad de las variables (*p. ej.* estudios).
+
+--
+
+4. Calcular la **diferencia** entre los datos poblaciones y las variables de la encuesta.
+
+--
+
+5. Calcular el **error absoluto medio** (*MAE*) de cada variable. En la que `\(\hat{y}\)` es el porcentaje de la encuesta e `\(y\)` el porcentaje de la misma categoría en la población. `\(k\)` es el número de categorías de la variable.
+
+
+`$$\begin{aligned}
+MAE = \frac{\sum{|\hat{y} - y|}}{k}
+\end{aligned}$$`
+
+
+---
+# Cálculo del MAE
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Variable &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; Categoría &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Muestra &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Población &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Dif. &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Grupo de edad &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 18-29 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 22 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 18 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 4 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Grupo de edad &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 30-44 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 25 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 24 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Grupo de edad &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 45-64 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 23 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 23 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Grupo de edad &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 65+ &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 30 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 35 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 5 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+`$$\begin{aligned}
+MAE = \frac{10}{4} = 2.5
+\end{aligned}$$`
+
+
+---
+
+class: inverse, center, middle
+# Práctica: análisis de representatividad
+
+---
+
+class: inverse, center, middle
+# Ajustes en las encuestas
+
+---
+# Una muestra de usuarios de Xbox
+
+.pull-left[
+- En el marco de las elecciones presidenciales de 2012 en EE.UU Wang *et al.* realizaron una **encuesta (no probabilística)** a través de la plataforma de **usuarios de la Xbox**. La encuesta tuvo 345000 respuestas.
+
+- El nivel de **desajuste era notable**: 65% de los encuestados entre 18-29 años (19% en la población). Los hombres representaban el 93% (47% en la población). Mitt Romney sobrerrepresentado.
+
+- Ajustaron la muestra utilizando **técnicas estadísticas**. El resultado fue similar al del promedio de encuestas tradicionales.
+]
+
+--
+
+.pull-right[
+&lt;img src="pics/pic4.png" width="536" style="display: block; margin: auto;" /&gt;
+Wang *et al.*, 2015
+]
+
+---
+# Pesos o ponderaciones
+
+- Son **ajustes estadísticos** para preservar la representatividad de las muestras. Sirven para corregir desviaciones de la muestra debidas a la incidencia de los sesgos de cobertura, selección o no respuesta.
+
+--
+
+- A cada **caso le corresponde un peso** según sus características. El peso será más alto que la media si las características del elemento muestral están subrrepresentadas. Y serán más bajos que la media si ocurre lo contrario.
+
+--
+
+- Los pesos parten de un **cálculo general**:
+
+`$$\begin{aligned}
+w_k = \frac{N_k}{n_k} 
+\end{aligned}$$`
+
+--
+
+- Los pesos tienen como misión corregir desviaciones de la muestra, pero también pueden tener un **efecto negativo en la varianza de las estimaciones**, que serán menos precisas.
+
+---
+background-image: url(pics/pic15.png)
+background-position: 50% 50% 
+background-size: 95% 
+# Población
+
+--
+
+.pull-left[
+Población de cinco  &lt;/br&gt; **hombres** y cinco **mujeres** &lt;/br&gt; (censo)
+]
+
+--
+
+.pull-right[
+&lt;/br&gt;
+&lt;/br&gt;
+&lt;/br&gt;
+&lt;/br&gt;
+ &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; Investigar su **intención de &lt;/br&gt; &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;voto**
+]
+
+
+---
+background-image: url(pics/pic16.png)
+background-position: 50% 50% 
+background-size: 95% 
+# Población
+
+--
+.pull-left[
+Población (censo): &lt;/br&gt;
+&lt;/br&gt;
+ 5 (50%) **Mujeres** &lt;/br&gt;
+ 5 (50%) **Hombres**
+]
+
+--
+
+.pull-right[
+&lt;/br&gt; &lt;/br&gt;&lt;/br&gt; &lt;/br&gt;&lt;/br&gt; &lt;/br&gt;&lt;/br&gt; &lt;/br&gt;&lt;/br&gt; &lt;/br&gt;&lt;/br&gt; &lt;/br&gt;
+&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Población (modo Dios): &lt;/br&gt; &lt;/br&gt;
+&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;5 (50%) **Partido A**
+&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 5 (50%) **Partido B**
+]
+
+---
+background-image: url(pics/pic17.png)
+background-position: 50% 50% 
+background-size: 95% 
+# Incidencia de la no respuesta
+
+--
+.pull-left[
+Muestra: &lt;/br&gt;
+&lt;/br&gt;
+ 2 (29%) **Mujeres** &lt;/br&gt;
+ 5 (71%) **Hombres**
+]
+
+--
+.pull-right[
+&lt;/br&gt; &lt;/br&gt;&lt;/br&gt; &lt;/br&gt;&lt;/br&gt; &lt;/br&gt;&lt;/br&gt; &lt;/br&gt;&lt;/br&gt; &lt;/br&gt;&lt;/br&gt; &lt;/br&gt;
+&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Muestra: &lt;/br&gt; &lt;/br&gt;
+&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;2 (29%) **Partido A**
+&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 5 (71%) **Partido B**
+]
+
+
+---
+background-image: url(pics/pic17.png)
+background-position: 50% 50% 
+background-size: 95% 
+# Ponderación de no respuesta
+
+--
+.pull-left[
+&lt;/br&gt; &lt;/br&gt;
+Ponderación como: &lt;/br&gt; &lt;/br&gt;
+&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; `\(w_k = \frac{N_k}{n_k}\)`
+
+Para las **mujeres**: &lt;/br&gt; &lt;/br&gt;
+&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; `\(w_m = \frac{5}{2} = 2.5\)`
+
+Para los **hombres**: &lt;/br&gt; &lt;/br&gt;
+&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; `\(w_h = \frac{5}{5} = 1.0\)`
+]
+
+--
+
+.pull-right[
+&lt;/br&gt; &lt;/br&gt;&lt;/br&gt; &lt;/br&gt;
+&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; Estimar voto con &lt;/br&gt; &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; **pesos**: 
+&lt;/br&gt; &lt;/br&gt;
+
+&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;**M - A**: `\(2*2.5 = 5\)` (50%)  &lt;/br&gt;
+&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;**H - B**: `\(5*1.0 = 5\)` (50%)   &lt;/br&gt;
+]
+
+---
+# ¿Qué es necesario para que un peso funcione?
+
+- Un peso funciona cuando la varaible auxiliar que se utiliza para generarlo está correlacionada con la probabilidad de responder y con la varaible de interés. En el ejemplo:
+
+  - Sexo (variable auxiliar) estaba relacionado con la probabilidad de responder (H=100%; M=40%).
+  
+  - Sexo (variable auxiliar) correlacionaba de manera perfecta con el partido a votar (variable de interés).
+
+--
+
+- El rol fundamental de las **variables auxiliar**. Estas variables es información que existe para los que responden y los que no responden.
+
+  - Puede ser a nivel individual (marco muestral) o a nivel agregado (totales poblacionales).
+  
+  - La información auxiliar disponible es limitada (INE, otras encuestas) lo que condiciona la capacidad de los ajustes.
+  
+  - Pensar teóricamente qué variables pueden explicar mejor la probabilidad de responder y la variable de interés.
+
+---
+# Tipos de pesos
+
+
+
+---
+# Pesos de selección
+
+- Se utilizan en encuestas cuando las **probabilidades de selección de los grupos son diferentes** debido al muestreo. Por ejemplo, cuando en una encuesta a población general en España una comunidad autónoma está sobrerrepresentada en la muestra para realizar análisis específico en la submuestra de la comunidad.
+
+- Implica que en la **fase de muestreo** se ha sobrerrepresnetado a uno o más grupos de forma consciente. También se computan para ajustar las probabilidades de selección dentro de hogares o conglomerados de tamaño desigual.
+
+- **Necesario**: Este peso se calcula a través de las probabilidades de selección. Es necesario conocer, al menos, el total de casos de cada grupo de la población.
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Grupo &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; N &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; n &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Prob_sel &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Peso_sel &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Grupo1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1000 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 500 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.5 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Grupo2 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1000 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 100 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 10 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Grupo3 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1000 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 100 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 10 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+---
+# Pesos de no respuesta
+
+- Ajustan ante la posible presencia de sesgos provocados por la **no respuesta o la falta de cobertura**.
+
+--
+
+- Dos formas de calcularlos **determinista** o **probabilística**. En la forma determinista se vuelve a realizar en cálculo de `\(\frac{N_k}{n_k}\)`. 
+
+- En el método probabilístico se realiza un **modleo de regresión logística** en el que la varialbe dependiente es la respuesta y las variables independientes son las variables auxiliares. A partir del modelo se predice la probabilidad de responder de cada caso. El inverso de esa probabilidad es el peso. 
+
+--
+
+- **Necesario**: En el determinista vale con tener los totales poblacionales de cada grupo. En el probabilístico hay que tener **información a nivel individual de los que no responden**.
+
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Grupo &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; N &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; n &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Prob_sel &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Peso_sel &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Resp &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; RespXPeso_sel &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Peso_nr &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Grupo1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1000 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 500 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.5 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 250 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 500 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2.00 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Grupo2 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1000 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 100 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 10 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 90 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 900 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1.11 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Grupo3 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1000 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 100 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 10 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 70 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 900 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1.43 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+---
+# Postestratificación y calibración
+
+- Se trata de **ajustes a través de modelos**. En ambos métodos los *inputs* son los datos de la encuesta y los totales poblacionales. El modelo se encarga de generar unos pesos que fuerzan a la distribución de la muestra a ser idéntica a la de la población.
+
+--
+
+- En la **postestratificación** se incluyen todas las interacciones entre las variables auxiliares. Por ejemplo, si se utilizan sexo y edad el modelo ajustará un peso para los hombres de 18 a 30 años y otro para las mujeres de 18 a 30 años. Una vez se aplique el peso resultante, el porcentaje de hombres de 18 a 30 en la muestra y en la población serán idénticos.
+
+- En la **calibración** el ajuste se produce sin tener en cuenta las interacciones entre las variables. Es una técnica más flexible que la postestratificación. Aquí el porcentaje de hombres en la muestra y en la población serán idénticos una vez que se aplique el peso. Lo mismo ocurrirá con el grupo de 18 a 30 años. Sin embargo, es probable que el peso del grupo hombres de 18 a 30 en la muestra difiera de la población.
+
+--
+
+- **Necesario**: Los totales poblacionales de las variables por separado en la **calibración** y de los cruces de variables en la **postestratificación**.
+
+---
+# Probabilidad de participar a partir de una encuesta de referencia
+
+- Esta técnica se usa para **equilibrar muestras no probabilísticas**. Se trata de calcular la *pseudoprobabilidad* de que un elemento de la población se haya unido al panel de internautas y haya respondido a la encuesta.
+
+--
+
+- Para llevarla a cabo se utiliza una **encuesta de referencia, generalmente con más calidad**, que comparte algunas variables con la encuesta no probabilística. Estas dos encuestas se unen para calcular la probabilidad de que cada caso acabe participando en la encuesta mediante el uso de una regresión logística. El inverso de esa probabilidad es el peso de ajuste.
+
+--
+
+- **Necesario**: Una encuesta de referencia que sea de más calidad y que comparta parte de las variables con la encuesta no probabilística.
+
+---
+# Ajuste por modelos MRP y modelos de superpoblación
+
+- En este caso no se trata de estimar un peso, sino de a partir de un modelo ajustar la muestra y predecir el valor de la variable de interés sin sesgo.
+
+--
+
+- En el modelo **MRP** se realiza un modelo multinivel en el que para cada unidad geográfica se predice la variable dependiente en base a las características disponibles en la muestra y en los datos auxiliares. Las predicciones son ponderadas según las características geográficas. Se utiliza sobre todo para realizar estimaciones de voto para subgrupos o regiones.
+
+- En el **modelo de superpoblación** se predice la variable de interés para cada caso en la población a partir de un modelo ajustado en la muestra no probabilística.
+
+--
+
+- **Necesario**: Totales poblacionales a nivel de subgrupo para **MRP**. Datos poblacionales a nivel individual para los **modelos de superpoblación**.
+
+---
+class: inverse, center, middle
+
+# Generar un peso paso a paso con `R`
+
+---
+# Un ejemplo paso a paso para construir un peso en `R`
+
+1. Generar un *data frame* de totales poblacionales.
+
+2. Agregar los datos de la encuesta para la variable auxiliar.
+
+3. Calcular los pesos para cada celda.
+
+4. Unir los pesos a la encuesta, evaluar y escalar.
+
+---
+# Datos
+
+
+```r
+gss &lt;- gss_cat %&gt;% 
+  filter(year == 2014) %&gt;% 
+  select(race, rincome)
+  
+glimpse(gss)
+```
+
+```
+## Observations: 2,538
+## Variables: 2
+## $ race    &lt;fct&gt; White, White, White, White, White, White, White, White, …
+## $ rincome &lt;fct&gt; $25000 or more, $25000 or more, Not applicable, $10000 -…
+```
+
+---
+# 1. Generar un *data frame* de totales poblacionales
+
+- Los totales poblacionales extraídos de la [*American Communiy Survey*](https://www.census.gov/acs/www/data/data-tables-and-tools/).
+
+
+```r
+totales_pobla &lt;- data.frame(race = c("White", "Black", "Other"),
+                            N = c(233963128, 40379066, 44514806))
+
+totales_pobla
+```
+
+```
+##    race         N
+## 1 White 233963128
+## 2 Black  40379066
+## 3 Other  44514806
+```
+
+---
+# 2. Agregar los datos de la encuesta para la variable auxiliar
+
+- Agregar los datos de la encuesta para saber cuántos casos hay en cada grupo.
+
+
+```r
+gss_agg &lt;- gss %&gt;% 
+  group_by(race) %&gt;% 
+  summarise(n = n())
+
+gss_agg
+```
+
+```
+## # A tibble: 3 x 2
+##   race      n
+##   &lt;fct&gt; &lt;int&gt;
+## 1 Other   262
+## 2 Black   386
+## 3 White  1890
+```
+
+---
+# 3. Calcular los pesos para cada celda
+
+
+```r
+gss_agg &lt;- left_join(gss_agg, totales_pobla, by = "race")
+```
+
+```
+## Warning: Column `race` joining factor and character vector, coercing into
+## character vector
+```
+
+```r
+gss_agg$peso &lt;- gss_agg$N/gss_agg$n 
+
+gss_agg
+```
+
+```
+## # A tibble: 3 x 4
+##   race      n         N    peso
+##   &lt;chr&gt; &lt;int&gt;     &lt;dbl&gt;   &lt;dbl&gt;
+## 1 Other   262  44514806 169904.
+## 2 Black   386  40379066 104609.
+## 3 White  1890 233963128 123790.
+```
+
+---
+# 4. Unir los pesos a la encuesta, evaluar y escalar
+
+
+```r
+gss &lt;- left_join(gss, gss_agg, by = "race")
+
+sjmisc::frq(gss$race)
+```
+
+```
+## 
+## x &lt;character&gt;
+## # total N=2538  valid N=2538  mean=2.59  sd=0.74
+## 
+##    val  frq raw.prc valid.prc cum.prc
+##  Black  386   15.21     15.21   15.21
+##  Other  262   10.32     10.32   25.53
+##  White 1890   74.47     74.47  100.00
+##   &lt;NA&gt;    0    0.00        NA      NA
+```
+
+---
+# 4. Unir los pesos a la encuesta, evaluar y escalar
+
+
+```r
+sjmisc::frq(gss$race, weights = gss$peso)
+```
+
+```
+## 
+## xw &lt;character&gt;
+## # total N=318857000  valid N=318857000  mean=2.61  sd=0.70
+## 
+##    val       frq  label raw.prc valid.prc cum.prc
+##  Black  40379066 &lt;none&gt;   12.66     12.66   12.66
+##  Other  44514806 &lt;none&gt;   13.96     13.96   26.62
+##  White 233963128 &lt;none&gt;   73.38     73.38  100.00
+##   &lt;NA&gt;         0     NA    0.00        NA      NA
+```
+
+---
+# 4. Unir los pesos a la encuesta, evaluar y escalar
+
+
+```r
+sjmisc::frq(gss$rincome)
+```
+
+```
+## 
+## x &lt;categorical&gt;
+## # total N=2538  valid N=2538  mean=9.29  sd=5.58
+## 
+##             val frq raw.prc valid.prc cum.prc
+##       No answer   0    0.00      0.00    0.00
+##      Don't know  19    0.75      0.75    0.75
+##         Refused  73    2.88      2.88    3.62
+##  $25000 or more 951   37.47     37.47   41.10
+##  $20000 - 24999 143    5.63      5.63   46.73
+##  $15000 - 19999  87    3.43      3.43   50.16
+##  $10000 - 14999 111    4.37      4.37   54.53
+##   $8000 to 9999  30    1.18      1.18   55.71
+##   $7000 to 7999  14    0.55      0.55   56.26
+##   $6000 to 6999  24    0.95      0.95   57.21
+##   $5000 to 5999  32    1.26      1.26   58.47
+##   $4000 to 4999  25    0.99      0.99   59.46
+##   $3000 to 3999  38    1.50      1.50   60.95
+##   $1000 to 2999  36    1.42      1.42   62.37
+##        Lt $1000  32    1.26      1.26   63.63
+##  Not applicable 923   36.37     36.37  100.00
+##            &lt;NA&gt;   0    0.00        NA      NA
+```
+
+---
+# 4. Unir los pesos a la encuesta, evaluar y escalar
+
+
+```r
+sjmisc::frq(gss$rincome, weights = gss$peso)
+```
+
+```
+## 
+## xw &lt;categorical&gt;
+## # total N=318857000  valid N=318857000  mean=9.29  sd=5.57
+## 
+##             val       frq  label raw.prc valid.prc cum.prc
+##       No answer         0 &lt;none&gt;    0.00      0.00    0.00
+##      Don't know   2386695 &lt;none&gt;    0.75      0.75    0.75
+##         Refused   9317428 &lt;none&gt;    2.92      2.92    3.67
+##  $25000 or more 119050465 &lt;none&gt;   37.34     37.34   41.01
+##  $20000 - 24999  18063924 &lt;none&gt;    5.67      5.67   46.67
+##  $15000 - 19999  10958658 &lt;none&gt;    3.44      3.44   50.11
+##  $10000 - 14999  14056530 &lt;none&gt;    4.41      4.41   54.52
+##   $8000 to 9999   3913659 &lt;none&gt;    1.23      1.23   55.75
+##   $7000 to 7999   1813859 &lt;none&gt;    0.57      0.57   56.31
+##   $6000 to 6999   2994216 &lt;none&gt;    0.94      0.94   57.25
+##   $5000 to 5999   4076763 &lt;none&gt;    1.28      1.28   58.53
+##   $4000 to 4999   3118006 &lt;none&gt;    0.98      0.98   59.51
+##   $3000 to 3999   4723598 &lt;none&gt;    1.48      1.48   60.99
+##   $1000 to 2999   4487448 &lt;none&gt;    1.41      1.41   62.40
+##        Lt $1000   4038401 &lt;none&gt;    1.27      1.27   63.66
+##  Not applicable 115857350 &lt;none&gt;   36.34     36.34  100.00
+##            &lt;NA&gt;         0     NA    0.00        NA      NA
+```
+---
+# 4. Unir los pesos a la encuesta, evaluar y escalar
+
+
+```r
+gss$peso &lt;- gss$peso/mean(gss$peso)
+
+sjmisc::descr(gss$peso)
+```
+
+```
+## 
+## ## Basic descriptive statistics
+## 
+##  var    type label    n NA.prc mean   sd se   md trimmed            range
+##   dd numeric    dd 2538      0    1 0.13  0 0.99    0.98 0.52 (0.83-1.35)
+##  skew
+##  1.68
+```
+
+---
+# En resumen
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

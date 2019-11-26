@@ -39,3 +39,9 @@ pop %>%
   mutate(pobla = round(pobla, 1)) %>% 
   write_rds("datos/datos_poblacionales.RDS")
 
+
+# 3. idv eval -------------------------------------------------------------
+idv_eval <- openxlsx::read.xlsx("datos/_prep/idv_eval.xlsx") 
+
+write_rds(idv_eval, "datos/idv_eval.RDS")
+

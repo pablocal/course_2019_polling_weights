@@ -11,8 +11,8 @@
 #
 #
 # Options and packages ----------------------------------------------------
-library(tidyverse) # tidyverse for data management
-library(expss)
+library(tidyverse) # tidyverse para gestión de datos
+library(expss) # crear tablas personalizadas
 
 # 1. Data -----------------------------------------------------------------
 encuesta <- read_rds("datos/encuesta_gesop.RDS")
@@ -21,7 +21,7 @@ datos_poblacionales <- read_rds("datos/datos_poblacionales.RDS")
 # 2. Crear una tabla de resultados de la encuesta --------------------------
 # crear una tabla con las variables del análisis y guardar como un data frame
 tabla_muestra <- encuesta %>% # añadir datos
-  tab_cells(caut, tamuni, sexo, edad, estud, ocupa, recuerdo) %>% # añadir variables
+  tab_cells(caut, tamuni, sexo, edad, estud, ocupa) %>% # añadir variables
   tab_stat_cpct() %>% # añadir estadístico: porcentajes de columna
   tab_pivot()
 

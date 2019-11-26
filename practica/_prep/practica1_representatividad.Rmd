@@ -1,5 +1,5 @@
 ---
-title: "Práctica 1: Análisis de representatividad"
+title: "Práctica: análisis de representatividad"
 author: "Máster de Análisis Político y Electoral (UC3M)"
 date: "Nov. 2019"
 output: pdf_document
@@ -76,8 +76,7 @@ head(datos_poblacionales)
 
 ## 2. Crear una tabla con las estimaciones de la muestra
 
-En primer lugar echa un vistazo a los datos de la encuesta para ver qué variables nos interesan para este análisis. Date cuenta de que existe las variable `peso_sele`, que debemos de tener en cuenta, ya que se trata de una ponderación que ajusta la muestra en el caso de que hayan diferentes probabilidades de selección.
-
+En primer lugar echa un vistazo a los datos de la encuesta para ver qué variables nos interesan para este análisis. 
 
 ```{r}
 glimpse(encuesta)
@@ -89,7 +88,7 @@ Para poder unir la tabla con los datos poblacionales vas a cambiar el nombre de 
 
 ```{r}
 tabla_muestra <- encuesta %>% # añadir datos
-  tab_cells(caut, tamuni, sexo, edad, estud, ocupa, recuerdo) %>% # añadir variables
+  tab_cells(caut, tamuni, sexo, edad, estud, ocupa) %>% # añadir variables
   tab_stat_cpct() %>% # añadir estadístico: porcentajes de columna
   tab_pivot() # ensamblar tabla
 
@@ -101,7 +100,8 @@ colnames(tabla_muestra) <- c("variable_valor", "muestra") # cambiar los nombres 
 En primer lugar se utiliza la función `left_join()` para unir la `tabla_muestra` con los `datos_poblacionales` en base a la variable `"variable_valor"`, que está presente en ambas tablas.
 
 ```{r}
-tabla_muestra_pobla <- left_join(tabla_muestra, datos_poblacionales, by = "variable_valor") # unir tabla con totales poblacionales
+# unir tabla con totales poblacionales
+tabla_muestra_pobla <- left_join(tabla_muestra, datos_poblacionales, by = "variable_valor") 
 ```
 
 En segundo término se calcula la **diferencia entre la muestra y la población** y se descartan las filas que contienen valores perdidos `NA`.
@@ -128,18 +128,18 @@ tabla_muestra_pobla %>% # calcular el error medio absoluto para cada variable
   geom_col()
 ```
 
-Ahora céntrate en las variables que más desviaciones presentan: `ocupa`, `estud` y `recuerdo`. Observa cuáles son los grupos sobrerrepresentados y subrrepresentados en la muestra.
+Ahora céntrate en las variables que más desviaciones presentan: `ocupa` y `estud`. Observa cuáles son los grupos sobrerrepresentados y subrrepresentados en la muestra.
 
 ```{r, eval=F}
 tabla_muestra_pobla %>% 
-  filter(variable %in% c("ocupa", "estud", "recuerdo")) %>% 
+  filter(variable %in% c("ocupa", "estud")) %>% 
   select(valor, muestra, pobla, dif)
 
 ```
 
 ```{r, fig.align='center'}
 tabla_muestra_pobla %>% 
-  filter(variable %in% c("ocupa", "estud", "recuerdo")) %>% 
+  filter(variable %in% c("ocupa", "estud")) %>% 
   select(variable, valor, muestra, pobla, dif) %>% 
   kableExtra::kable()
 ```
