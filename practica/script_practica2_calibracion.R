@@ -28,7 +28,7 @@ datos_poblacionales <- read_rds("datos/datos_poblacionales.RDS")
 ## 1) Preparar totales poblacionales
 # Primera variable incluir todas las categorías; sucesivas variables todas menos una
 # Calibración sociodemográfica con caut, tamuni, sexo, edad, estud, ocupa
-# Total poblacional de españoles mayores de 18 años residentes en España es de 34581472
+# Total poblacional de españoles mayores de 18 años residentes en España es de 34581472 (INE, 1/2019)
 
 vars_socdem <- c("caut", "tamuni", "sexo", "edad", "estud", "ocupa")
 

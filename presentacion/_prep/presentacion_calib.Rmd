@@ -18,6 +18,7 @@ output:
 options(scipen = 99999)
 library(xaringanthemer)
 library(tidyverse)
+library(survey)
 
 theme_cus <- theme(
         )
@@ -60,7 +61,7 @@ Sturgis *et al.*, 2016
 
 - Generar un peso paso a paso con `R`
 
-  - **Práctica**: calibrar una muestra
+  - **Práctica**: ponderar una muestra
 
 
 ---
@@ -218,8 +219,6 @@ Problemas de las **encuestas probabilísticas**:
 ---
 # Problemas asociados a las muestras no probabilísticas
 
-
-
 ```{r, fig.align='center', echo=FALSE}
 knitr::include_graphics("pics/pic5.png") 
 ```
@@ -234,13 +233,12 @@ class: inverse, center, middle
 # Muestreo en encuestas electorales
 Las encuestas se pueden diferenciar según el modo de muestreo elegido.
 
-- Encuesta con muestra **probabilística**: Tanto los hogares como las personas que son entrevistadas son seleccionadas utilizando métodos probabilísticos.
+- Las encuestas realizadas para el análisis político y electoral suelen partir de muestras cuasiprobabilísticas o no probabilísticas.
 
-- Encuesta **cuasiprobabilística**: Hacen una selección probabilística del hogar y utilizan cuotas para seleccionar a la persona a entrevistar.
+- En España las encuesta telefónicas utilizan cuotas de sexo y edad. Algunas encuestas de panel online utilizan cuotas más extendidas.
 
-- Encuesta **no probabilística**: Paneles de internet o listados de números de teléfono en los que no existe una probabilidad conocida de ser incluido.
+- En algunas encuestas telefónicas se especifica el uso de teléfonos fijos y móviles.
 
-Las encuestas realizadas para el análisis político y electoral suelen ser cuasiprobabilísticas o no probabilísticas.
 ---
 # Encuestas electorales en España
 
@@ -248,15 +246,15 @@ Las encuestas realizadas para el análisis político y electoral suelen ser cuas
 sample_pic <- data.frame(
   `Organización` = c("CIS (Barómetros)", "CIS (ESE)", "Metroscopia", "GAD3", "IMOP insights", "40dB", "GESOP", "NC Rport", "Sociométrica"),
   `Muestreo` = c("Cuasiprobabilístico", "Probabilístico", "Probabilítico/cuasiprobabilístico", "Cuasiprobabilístico", "Cuasiprobabilístico", "No probabilístico", "Cuasiprobabilístico", "Cuasiprobabilístico", "Cuasiprobabilístico"),
-  `Descripción` = c("Presencial. Selección de secciones censales de forma probabilística. Hogares con rutas aleatorias. Entrevistados por cuotas",
-                    "Presencial.Selección de hogares a partir de ..",
-                    "Telefónica. ",
-                    "Telefónica.",
-                    "Telefónica.",
-                    "Panel de internautas.",
-                    "Telefónica.",
-                    "Telefónica.",
-                    "Telefónica y panel de internautas.")
+  `Descripción` = c("Presencial. Selección de secciones censales de forma probabilística. Hogares con rutas aleatorias. Entrevistados por cuotas sexo y edad.",
+                    "Presencial. Selección de personas directamente del padrón.",
+                    "Telefónica (móviles). Muestra aleatoria de teléfonos. Sin cuotas.",
+                    "Telefónica (fijos y móviles). Cuotas sexo, edad y región.",
+                    "Telefónica (fijos 55% y móviles 45%). Muestra aleatoria de teléfonos sin cuotas.",
+                    "Panel de internautas. Cuotas de sexo, edad, clase social, región y tamaño de hábitat.",
+                    "Telefónica. Cuotas de sexo y edad.",
+                    "Telefónica.Cuotas de sexo y edad.",
+                    "Telefónica y panel de internautas. Cuotas sexo, edad y provincia.")
 )
 
 sample_pic %>% kableExtra::kable()
@@ -626,13 +624,17 @@ class: inverse, center, middle
 ---
 # Un ejemplo paso a paso para construir un peso en `R`
 
-1. Generar un *data frame* de totales poblacionales.
+Para calcular el peso por calibración vamos a utilizar el paquete `survey`. Para la manipulación de datos `tidyverse`.
 
-2. Agregar los datos de la encuesta para la variable auxiliar.
+1. Generar un `vector` con nombres de **totales poblacionales**.
 
-3. Calcular los pesos para cada celda.
+2. Preparar las **variables auxiliares** en la encuesta y el **peso inicial**.
 
-4. Unir los pesos a la encuesta, evaluar y escalar.
+3. Calcular los pesos mediante **calibración**.
+
+4. **Evaluar** la calibración.
+
+5. **Escalar** los pesos para que tengan media 1.
 
 ---
 # Datos
@@ -648,96 +650,145 @@ glimpse(gss)
 ```
 
 ---
-# 1. Generar un *data frame* de totales poblacionales
+# 1. Generar un `vector` de totales poblacionales
 
 - Los totales poblacionales extraídos de la [*American Communiy Survey*](https://www.census.gov/acs/www/data/data-tables-and-tools/).
 
-- Crear un `data frame` con los totales.
+- Crear un `vector` con **nombres de los totales**. En ese vector:
+  - El primer elemento del vector siempre lleva el nombre `(Intercept)` y corresponde con el **total poblacional**.
+  - De cada variable que se incluya en la calibración se **retira una categoría**.
+  - El **nombre de los elementos** es una combinación del nombre de la variable y la etiqueta de la categoría.
 
 ```{r}
-totales_pobla <- data.frame(race = c("White", "Black", "Other"),
-                            N = c(196766012, 29330377, 18724940))
+totales_pobla <- c("(Intercept)" = 244821329, "raceBlack" = 29330377, "raceWhite" = 196766012)
 
 totales_pobla
 ```
 
 ---
-# 2. Agregar los datos de la encuesta para la variable auxiliar
+# 2. Preparar las variables auxiliares en la encuesta y el peso inicial
 
-- Agregar los datos de la encuesta para saber **cuántos casos hay en cada grupo** en un `data frame` nuevo.
+- Revisar que las **categorías de la variable** coninciden con las del vector de totales poblacionales.
 
 - Puede ocurrir que algunas categorías pueden tener un **número reducido de casos** (n < 10), por lo que cabe la posibilidad de combinar las celdas para evitar pesos extremos.
 
+```{r}
+sjmisc::frq(gss$race)
+gss <- mutate(gss, race = recode(race, "Not applicable" = "White"))
+```
+
+---
+# 2. Preparar las variables auxiliares en la encuesta y el peso inicial
+
+- En la calibración se incluye un peso inicial que es el **peso de selección elevado al total poblacional**. En caso de que no haya peso de selección, se incluye un peso que es el total poblacional entre el número de casos.
 
 ```{r}
-gss_agg <- gss %>% 
-  group_by(race) %>% 
-  summarise(n = n())
-
-gss_agg
+gss$peso_ini <- 244821329/nrow(gss)
 ```
 
 ---
-# 3. Calcular los pesos para cada celda
+# 3. Calcular los pesos mediante calibración
 
-- **Combinar** los datos de la encuesta con los totales poblacionales. 
+- Declarar el **diseño** de la encuesta con `svydesign()`. Esta función sirve para registrar cuál es el diseño de la encuesta:
 
-- Proceder a **calcular el peso** como $\frac{N_k}{n_k}$. Cada caso en el grupo *Other* represeta a 71,469 casos de la población. Cada caso del grupo *White* representa 104,109 casos.
+  - `ids` es la variable conglomerados en el caso de que la meustra sea conglomerada. En caso contrario utilizar `~ 0`.
+  - `weights` es el nombre de la variable de los pesos de selección o peso inicial (`~ peso_ini`). 
+  
+```{r}
+gss_svy <- svydesign(ids = ~ 0, weights = ~ peso_ini, data = gss)
+```
+  
+---
+# 3. Calcular los pesos mediante calibración
+
+- Generar los **pesos de calibración** con la función `calibrate()`:
+  - `design` es el objeto de tipo `survey` que se genera en el paso anterior.
+  - `formula` son las varaibles incluidas en la calibración antecedidas por `~`.
+  - `population` es el vector de totales poblacionales.
+  - `calfun` es el tipo de calibración, se utiliza `logit` para evitar que se den pesos negativos, por eso es obligatorio establecer `bounds` de 0 hasta un valor elevado.
 
 ```{r, message=FALSE}
-gss_agg <- left_join(gss_agg, totales_pobla, by = "race")
-
-gss_agg$peso <- gss_agg$N/gss_agg$n 
-
-gss_agg
+gss_cal <- calibrate(design = gss_svy, 
+          formula = ~ race,
+          population = totales_pobla,
+          calfun = "logit",
+          bounds = c(0, 9999999))
 ```
 
 ---
-# 4. Unir los pesos a la encuesta, evaluar y escalar
+# 4. Evaluar la calibración
 
 - Combinar los **pesos con la encuesta**.
+
+- Comprobar los **máximos y los mínimos** del peso, para evaluar si hay que recortar. 
+
+```{r, message=FALSE, warning=FALSE}
+peso_cal <- weights(gss_cal)
+gss$peso_cal <- peso_cal
+sjmisc::descr(gss$peso_cal)
+```
+
+---
+# 4. Evaluar la calibración
 
 - Comprobar que el peso está funcionando comparando la **variable auxiliar** con los **totales poblacionales**.
 
 ```{r, message=FALSE, warning=FALSE}
-gss <- left_join(gss, gss_agg, by = "race")
-gss_agg
+totales_pobla
+sjmisc::frq(gss$race, weights = gss$peso_cal)
 ```
-
 ---
-# 4. Unir los pesos a la encuesta, evaluar y escalar
+# 4. Evaluar la calibración
 
-```{r, message=FALSE, warning=FALSE}
-sjmisc::frq(gss$race, weights = gss$peso)
-```
-
----
-# 4. Unir los pesos a la encuesta, evaluar y escalar
-
-- Evaluar el efecto sobre la variable `partyid`.
+- Evaluar el **efecto sobre una o varias variables relevantes** de la encuesta.
 
 ```{r, message=FALSE}
 sjmisc::frq(gss$partyid)
 ```
 
 ---
-# 4. Unir los pesos a la encuesta, evaluar y escalar
+# 4. Evaluar la calibración
 
 ```{r, message=FALSE}
-sjmisc::frq(gss$partyid, weights = gss$peso)
+sjmisc::frq(gss$partyid, weights = gss$peso_cal)
 ```
 ---
-# 4. Unir los pesos a la encuesta, evaluar y escalar
+# 5. Escalar el peso
+
+- El último paso consiste en **escalar el peso para que tenga media 1**. En raras ocasiones se mantiene un peso que eleve al total poblacional
 
 ```{r, message=FALSE}
-gss$peso <- gss$peso/mean(gss$peso)
+gss$peso_cal <- gss$peso_cal/mean(gss$peso_cal)
 
-sjmisc::descr(gss$peso)
+sjmisc::descr(gss$peso_cal)
 ```
+
 ---
 # En resumen
+
+- El **diseño y la recogida** de datos pueden afectar a la **representatividad** de la muestra. Falta de cobertura de la población, no repuesta o selección.
+
+- La **falta de representatividad no invalida el uso de los datos**, pero hay que tenerlas en cuenta a la hora de lelvar a cabo el análisis.
+
+- El **análisis de representatividad** permite establecer un diagnóstico de los problemas de la muestra. Cuantos más datos auxiliares más completo será el análisis de representatividad.
+
+- Los **ajustes** son necesarios para garantizar el proceso de inferencia de la muestra a la población. El uso de pesos es necesario, algunas encuestas incluyen sus propios ajustes.
+
+- El funcionamiento de los ajuste es parcial y dependen en lo **adecuadas que sean las variables auxiliares**. Las variables auxiliares deben explicar el mecanismo de respuesta y estár correlacionadas con las variables de interés.
 
 ---
 class: inverse, center, middle
 
 # Práctica: ponderar una muestra
+
+---
+class: inverse, middle
+
+
+## Pablo Cabrera Álvarez
+####Universidad de Salamanca
+
+### pablocal@usal.es | @pablocalv
+
+---
+# Bibliografía
