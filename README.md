@@ -1,2 +1,6 @@
-# course_2019_polling_weights
-Materials for the class about polls and weights (Nov. 2019) 
+# Diagnosticar y ajustar
+
+## Máster Análisis Político y Electoral (UC3M)
+### Nov. 2019
+
+Materiales de la sesión sobre representatividad y ajustes en encuestas.
