@@ -13,19 +13,18 @@ encuesta <- read_rds("../../datos/encuesta_gesop.RDS")
 datos_poblacionales <- read_rds("../../datos/datos_poblacionales.RDS")
 ```
 
-## Situación inicial
-Febrero de 2019. El Gobierno presidido por Pedro Sánchez acaba de convocar elecciones que se celebrarán el domingo 28 de abril. En la oficina de análisis del presidente quieren tener una estimación de voto reciente para tomar decisiones en el marco de la campaña. Están muy interesados en la **estimación del voto del PSOE**, pero también en las del **PP** y **Vox**.
+## La práctica
 
-Como analista te piden que **realices la estimación de voto** y te envían los microdatos de una encuesta. El primer paso será realizar un **análisis de representatividad** para comprobar la calidad de los datos. 
+En esta práctica vas a realizar un análisis de representatividad de una encuesta realizada por la empresa GESOP.
 
 > La **encuesta** (n=1000) fue realizada por la empresa GESOP. El trabajo de campo se hizo mediante llamadas, sin especificar si a fijos o a móviles, entre los días 13 y 15 de febrero. El muestreo de los hogares fue estratificado por comunidad y tamaño del municipio. En cada hogar la persona entrevistada fue elegida utilizando cuotas de sexo y edad. La [ficha técnica](https://www.elperiodico.com/es/ext_resources/gesop/EP_EncPreelEspa%C3%B1a_Feb19_FichaT%C3%A9cnica+Cuestionario+ListaDeVariables.pdf) y los [microdatos](https://www.elperiodico.com/es/ext_resources/gesop/EP_EncPreelEspa%C3%B1a_Feb19_Microdatos.zip) están disponibles en abierto.
 
 ## Planificar la tarea
 Antes de emepezar con los datos dedica unos cinco minutos a planificar la tarea. En la carpeta `datos` está el `cuestionario_GESOP_feb2019.pdf`. Abre el cuestionario (pp. 4-7) y responde a las siguientes preguntas:
 
-**¿Qué variables contenidas en el cuestionario pueden servir para realizar un análisis de prepresentatividad?**
+**¿Qué variables contenidas en el cuestionario pueden servir para realizar un análisis de representatividad?**
 
-**¿De qué fuente (estudio/organización) podrías recabar los datos poblacionales de las variables que has señalado en la pregunta anterior anterior?** 
+**¿De qué fuente (estudio/organización) podrías recabar los datos poblacionales de las variables que has señalado en la pregunta anterior?** 
 \newpage
 
 
@@ -67,7 +66,7 @@ encuesta <- read_rds("datos/encuesta_gesop.RDS")
 datos_poblacionales <- read_rds("datos/datos_poblacionales.RDS")
 ```
 
-El objeto `encuesta` es un *data frame* en el que están contenido los datos de la encuesta. El objeto `datos_poblacionales` es también un *data frame* en el que están las estimaciones (porcentajes) poblacionales de las variables que vas a utilizar en el análisis de representatividad. Estos datos están en formato largo:
+El objeto `encuesta` es un *data frame* en el que están contenido los datos de la encuesta. El objeto `datos_poblacionales` es también un *data frame* en el que están las estimaciones (porcentajes) poblacionales de las variables que vas a utilizar en el análisis de representatividad. Los datos poblacionales están en formato largo:
 
 
 ```{r}
@@ -76,13 +75,13 @@ head(datos_poblacionales)
 
 ## 2. Crear una tabla con las estimaciones de la muestra
 
-En primer lugar echa un vistazo a los datos de la encuesta para ver qué variables nos interesan para este análisis. 
+Primero, explora a los datos de la `encuesta` para ver qué variables nos interesan para este análisis. 
 
 ```{r}
 glimpse(encuesta)
 ```
 
-Para construir la tabla vas a utilizar el paquete `expss`. En ese paquete se definen los datos. Posteriormente las variables en filas, que se incluyen en la función `tab_cells()`. La operación que se pretende realizar, en este caso obtener los porcentajes de columna, se define con `tab_stat_cpct()`. La función `tab_pivot()` se encarga de ensamblar todas las partes.
+Para construir la tabla vas a utilizar el paquete `expss`. En ese paquete se declaran los datos. Posteriormente, las variables en filas, que se incluyen en la función `tab_cells()`. La operación que se pretende realizar, en este caso obtener los porcentajes de columna, se define con `tab_stat_cpct()`. La función `tab_pivot()` se encarga de ensamblar todas las partes.
 
 Para poder unir la tabla con los datos poblacionales vas a cambiar el nombre de las columnas del objeto `tabla`. La primera columna será `variable_valor` y la segunda `muestra`.
 
@@ -116,7 +115,7 @@ tabla_muestra_pobla <- tabla_muestra_pobla %>%
 
 Ahora vas a analizar las desviaciones entre la muestra y la población. Para ello, crea un **gráfico resumen** en el que se visualice el **error medio absoluto** (*MAE* en inglés) asociado a cada variable.
 
-> El **MAE** (*mean absolute error*) es una medida resumen empleada para evaluar el error total en variables categóricas. Por ejemplo, si en la población hay un 50% de hombres y un 50% de mujeres, y en la muestra los porcentajes son 45% hombres y 55% mujeres, el MAE será del 5%. En este caso, la diferencia media entre los totales poblacionales y la encuesta es del 5%.
+> *El **MAE** (*mean absolute error*) es una medida resumen empleada para evaluar el error total al comparar las distribuciones de dos variables categóricas. Por ejemplo, si en la población hay un 50% de hombres y un 50% de mujeres, y en la muestra los porcentajes son 45% hombres y 55% mujeres, el MAE será del 5%. En este caso, la diferencia media entre los totales poblacionales y la encuesta es del 5%.*
 
 
 ```{r}

@@ -15,25 +15,27 @@ datos_poblacionales <- read_rds("../../datos/datos_poblacionales.RDS")
 ```
 
 ## Situación inicial
-En esta segunda fase vas a construir un peso con las variables sociodemográficas para las que existen estimaciones poblacionales (`caut`, `tamuni`, `sexo`, `edad`, `ocupa` y `estud`).
+En esta segunda fase de la práctica vas a construir un peso con las variables sociodemográficas para las que existen estimaciones poblacionales (`caut`, `tamuni`, `sexo`, `edad`, `ocupa` y `estud`).
 
 ## Planificar la tarea
 Recuerda los pasos necesarios para construir tu propio peso:
 
-1. Generar un vector con los totales poblacionales.
+1. Generar un `vector` con nombres de **totales poblacionales**.
 
-2. Especificar el diseño de la encuesta.
+2. Preparar las **variables auxiliares** en la encuesta y el **peso inicial**.
 
-3. Ejecutar el modelo de calibración.
+3. Calcular los pesos mediante **calibración**.
 
-4. Evaluar el peso.
+4. **Evaluar** la calibración.
+
+5. **Escalar** los pesos para que tengan media 1.
 
 ## 1. Datos y paquetes
 Para este ejercicio vas a utilizar la encuesta `encuesta_gesop.RDS` y los datos poblacionales `datos_poblacionales.RDS` que se encuentran en la carpeta `datos`. Además, harás uso de los paquetes:
 
-- `tidyverse`: Contiene a suvez un conjunto de paquetes que facilitan la gestión y el análisis de los datos.
-- `expss`: Permite crear tablas personalizadas.
-- `survey`: Contiene la función `calibrate()` que permite realizar la calibración.
+- `tidyverse`: contiene un conjunto de paquetes que facilitan la gestión y el análisis de los datos.
+- `expss`: permite crear tablas personalizadas.
+- `survey`: contiene las funciones `svydesign()` y `calibrate()` que permiten realizar la calibración.
 
 1) **Cargar los paquetes**:
 
@@ -56,13 +58,14 @@ datos_poblacionales <- read_rds("datos/datos_poblacionales.RDS")
 ```
 
 ## 2. Peso con las variables sociodemográficas
-El primer peso que vas a generar será utilizando las variables sociodemográficas. Como ya viste en el análisis de representatividad, las variables `ocupa` y `estud` presentan desviaciones significativas. El resto de variables, como `sexo` o `edad`, también serán incluidas en la calibración para asegurar que no se producen desviaciones adicionales.
+Vas a calibrar la muestra para que sea representativa con respecto a las variables sociodemográficas. Como ya viste en el análisis de representatividad, las variables `ocupa` y `estud` presentan desviaciones significativas. El resto de variables, como `sexo` o `edad`, también serán incluidas en la calibración para asegurar que no se producen desviaciones adicionales.
 
 ### 2.1 Crear un vector con los totales poblacionales
 En primer lugar necesitas crear un vector con los totales poblacionales para que el modelo sepa cuál es la distribución poblacional de las variables en la muestra. Para ello vas a utilizar los `datos_poblacionales`, que es un *data frame* que contiene las estimaciones para las variables de interés.
 
-Los `datos_poblacionales` están expresados en porcentaje, así que el primer paso es **transformarlo en totales**. El censo electoral de residentes en España de las elecciones del 28-A era de 34.581.472. El segundo paso es eliminar la primera categoría de cada variable, para que el modelo de calibración pueda converger. En `datos_poblacionales` la variable `valor_orden`
-presenta el orden de las categorías dentro de la variable. Eliminamos la primera categoría de cada variable.
+Los `datos_poblacionales` están expresados en porcentaje, así que el primer paso es **transformarlo en totales**. El censo electoral de residentes en España de las elecciones del 28-A era de 34.581.472. 
+
+El segundo paso consiste en eliminar la primera categoría de cada variable, para que el modelo de calibración pueda converger. En `datos_poblacionales` la variable `valor_orden` presenta el orden de las categorías dentro de la variable. 
 
 ```{r}
 vars_socdem <- c("caut", "tamuni", "sexo", "edad", "estud", "ocupa")
@@ -73,9 +76,9 @@ pobla_socdem <- datos_poblacionales %>%
   filter(valor_orden != 1)
 ```
 
-Para crear el vector de **totales poblacionales**, que es un *input* necesario de la función `calibrate()`, utilizarás las columna `total_pobla` que generaste en el paso anterior. Para indicar a qué categoría corresponde cada total, asigna nombres al factor que correspondan a unir las columnas `variable` y `valor`. 
+Para crear el vector de **totales poblacionales**, que es un *input* necesario de la función `calibrate()`, utilizarás las columna `total_pobla` que generaste en el paso anterior. Para indicar a qué categoría corresponde cada total, asigna un nombre a cada elemento del vector. Esos nombres serán el resultado de a unir las columnas `variable` y `valor` utilizando la función `paste0()`. 
 
-Por último en este paso, se añade un primer valor al vector `totales_pobla`, que corresponda con el total de elementos de la población (N). El nombre de este elemento será `(Intercept)`.
+Por último en este paso, añade un primer valor al vector `totales_pobla` que corresponda con el total de elementos de la población (N). El nombre de este elemento será `(Intercept)`.
 
 ```{r}
 totales_pobla <- pobla_socdem$total_pobla
@@ -86,28 +89,36 @@ totales_pobla
 
 ## 2.2 Preparar los datos de la encuesta
 
-Las variables de la encuesta ya están preparadas. Sin embargo, antes de comenzar con la calibración es necesario crear un **peso inicial**. Ese peso inicial sería el peso de selección, en caso de que existiera. Como no es el caso, vas a crear un peso  (`peso_pobla`) para cada elemento de la encuesta que será el resultado de dividir el total poblacional (N) entre el número de casos en la muestra (n).
+Las variables de la encuesta ya están preparadas. Sin embargo, antes de comenzar con la calibración es necesario crear un **peso inicial**. Ese peso inicial sería el peso de selección si existiera. Como no es el caso, vas a crear un peso  (`peso_pobla`) que, para cada elemento de la muestra, será el resultado de dividir el total poblacional (N) entre el número de casos en la muestra (n).
 
 ```{r}
 encuesta <- encuesta %>% 
   mutate(peso_pobla = 34581472/nrow(.))
 ```
 
-> **Escalar el peso inicial**. El modelo de calibración converge más rápidamente si el peso inicial está escalado de forma que la suma de los pesos sea equivalente al total poblacional. En caso de que exista un peso de selección también puede escalarse al total poblacional con una sencilla operación.
+> *Escalar el peso inicial. El modelo de calibración converge más rápidamente si el peso inicial está escalado de forma que la suma de los pesos sea equivalente al total poblacional. En caso de que exista un peso de selección, también se puede escalar al total poblacional con una sencilla operación*.
 
 ## 2.3 Declarar el diseño de la encuesta y la calibración
-Antes de proceder con el modelo de calibración hay que declarar el diseño de la encuesta utilizando `svydesign` del paquete `survey`. Este paso sirve para detallar características de la encuesta como son los datos (`data`), la variable que sirve para identificar los conglomerados (`id`) y los pesos de selección  (`weights`).
+Antes de proceder con el modelo de calibración hay que declarar el diseño de la encuesta utilizando `svydesign()` del paquete `survey`. Este paso sirve para detallar las características de la muestra como son:
 
-Nota que en el argumento `id = ~ 0`, esto quiere decir que la muestra no fue seleccionada a partir de conglomerados.
+- Los datos (`data`). 
+- La variable que sirve para identificar los conglomerados (`id`). El argumento `id = ~ 0` declara que la muestra no fue seleccionada a partir de conglomerados.
+- Los pesos de selección o el peso inicial (`weights`).
 
-> El paquete `survey` permite hacer un análisis de los datos de encuesta. Además de la posibilidad de calcular los pesos por calibración se puede utilizar para realizar estimaciones teniendo en cuenta todos los elementos del diseño de la encuesta. Por ejemplo, la función svymean permite calcular la media y el error estándar verdadero.
+> *El paquete `survey` permite hacer análisis de datos de encuesta. Además de la posibilidad de calcular los pesos por calibración, también se puede utilizar para realizar estimaciones teniendo en cuenta todos los elementos del diseño de la encuesta. Por ejemplo, la función `svymean()` permite calcular la media y el error estándar verdadero*.
 
 
 ```{r}
 svy_des <- svydesign(id = ~ 0, weights = ~ peso_pobla, data = encuesta)
 ```
 
-La **función `calibrate()` tiene cinco argumentos básicos**. En `design` hay que especificar el diseño de la encuesta del paso anterior. La `formula` siempre está precedida por `~` y contiene las variables que van a tomar parte en la calibración. El argumento `population` se corresponde con el vector de `totales_pobla` que creaste en el primer paso. Por último, `calfun` sirve para especificar el tipo de calibración a realizar. Hay tres tipos `"logit"`, `"linear"` y `"raking"`. La claibración logística impide que se generen pesos negativos, tal y como se especifica en el argumento `bounds`. En `bounds`, que es obligatorio si `calfun = "logit"`, se recogen los límites inferior y superior entre los que se deben de mover los pesos.
+La **función `calibrate()` tiene cinco argumentos básicos**. 
+
+- En `design` hay que especificar el diseño de la encuesta del paso anterior. 
+- La `formula` siempre está precedida por `~` y contiene las variables que van a tomar parte en la calibración. Como side un modelo se tratara, las variables se separan por el operador `+`.
+- El argumento `population` se corresponde con el vector de `totales_pobla` que creaste en el primer paso. 
+- `calfun` sirve para especificar el tipo de calibración a realizar. Hay tres tipos `"logit"`, `"linear"` y `"raking"`. La claibración logística impide que se generen pesos negativos, tal y como se especifica en el argumento `bounds`. 
+- En `bounds`, que es obligatorio si `calfun = "logit"`, se recogen los límites inferior y superior entre los que se deben de mover los pesos. Lo normal es establecer el cero y un valor relativamente alto.
 
 
 ```{r}
@@ -121,10 +132,14 @@ calib_socdem <- calibrate(design = svy_des,
 
 
 ## 2.4 Evaluar el peso
-La evaluación del peso comprende tres fases. Primero se comprueba el peso en sí, para identificar pesos extremos y hacer las transformaciones pertinentes. En segundo lugar se comprueba que la calibración ha hecho su trabajo, es decir, si se utiliza el peso no existen diferencias entre la muestra y los totales poblacionales. Por último, se evalúa el peso por su efecto en algunas variables de interés para el análisis.
+La evaluación del peso comprende tres fases:
+
+1. Se **comprueba el peso en sí**, para identificar pesos extremos y hacer las transformaciones pertinentes. 
+2. Se comprueba que la calibración ha hecho su trabajo, comparando las **variables auxiliares con los totales poblacionales**. 
+3. Se evalúa el **efecto del peso en algunas de las variables de interés** para el análisis.
 
 ### 2.4.1 Estadísticos descriptivos del peso
-El objeto `peso_calib_socdem` es una lista que contiene información acerca del diseño de la encuesta. De aquí en adelante sólo necesitarás los pesos, así que para extraerlos puedes utilizar la función `weights()`. El resultado es un vector con tantos pesos como casos en la encuesta. Ese vector se incluye en la encuesta como una variable más.
+El objeto `calib_socdem` es una lista que contiene información acerca del diseño de la encuesta. De aquí en adelante sólo necesitarás los pesos, así que para extraerlos puedes utilizar la función `weights()`. El resultado es un vector con tantos pesos como casos hay en la encuesta. Ese vector se incluye en la encuesta como una variable más.
 
 ```{r}
 peso_calib_socdem <- weights(calib_socdem)
@@ -138,10 +153,10 @@ sjmisc::descr(encuesta$peso_calib_socdem)
 hist(encuesta$peso_calib_socdem)
 ```
 
-> *Outliers* y recortar pesos. En ocasiones los pesos producen valores extremos. Por regla general, un peso no debría superar siete veces la media, aunque siempre depende del contexto. Una táctica es recortar los pesos al 99% o al 95%.
+> *Outliers y recortar pesos. En ocasiones los pesos producen valores extremos, lo que provocaría que las estimaciones sean menos precisas. Para detectar los pesos extremos hay que observar las distancias entre los pesos, aunque siempre depende del contexto. Una táctica es recortar los pesos al 99% o al 95%.*
 
 ### 2.4.2 Comprobar que los totales poblacionales y la muestra ponderada coinciden
-Ahora hay que crear una tabla de las variables empleadas en la calibración utilizando el peso. Para ello se utiliza el paqute `expss` como en la práctica de anñalisis de representatividad.
+Ahora hay que crear una tabla de las variables empleadas en la calibración utilizando el peso. Para ello se utiliza el paqute `expss`, como en la práctica de anñalisis de representatividad.
 
 ```{r}
 tabla <- encuesta %>%
@@ -158,11 +173,11 @@ La tabla de la muestra ponderada se combina con los `datos_poblacionales` para c
 ```{r}
 tabla_checks <- left_join(tabla, datos_poblacionales, by = "variable_valor") %>% 
   mutate(dif = round(calibrado - pobla, 1))
-sum(tabla_checks$dif)
+sum(tabla_checks$dif, na.rm = T)
 ```
 
 ### 2.4.3 Comprobar el efecto del peso sobre las variables de intéres
-Por último se evalúa el efecto del peso en las variables de interés, en este caso `idv`. PAra ello se comparan las estimaciones entre `idv` sin ponderar e `idv` ponderada. 
+Por último, se evalúa el efecto del peso en las variables de interés, en este caso `idv`. Para ello se comparan las estimaciones entre `idv` sin ponderar e `idv` ponderada. 
 
 ```{r}
 sjmisc::frq(encuesta$idv) 
@@ -171,4 +186,11 @@ sjmisc::frq(encuesta$idv, weights =  encuesta$peso_calib_socdem)
 
 
 ## 2.5 Escalar y finalizar el peso
+Por último, se escala el peso para que tenga media 1.
+
+```{r}
+encuesta <- encuesta %>% 
+  mutate(peso_calib_socdem = peso_calib_socdem/mean(peso_calib_socdem))
+sjmisc::descr(encuesta$peso_calib_socdem)
+```
 
